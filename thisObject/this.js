@@ -219,7 +219,7 @@ doFoo( obj.fooo2 ); // "oops, global"
 	}
 
 	bind();
-	setTimeout( bind, 100 ); // 2
+	// setTimeout( bind, 100 ); // 2
 	// hard-bound `bar` can no longer have its `this` overridden
 	// bind.call( window ); // 2
 
@@ -352,3 +352,140 @@ console.log(teto);
 // and set that new object as the this for the call of foo(..). So new is the
 // final way that a function call’s this can be bound. We’ll call this
 // new binding.
+
+
+// 4 RULES ORDER
+
+// So, now we’ve uncovered the four rules for binding this in function calls.
+// All you need to do is find the call-site and inspect it to see which rule
+// applies. But, what if the call-site has multiple eligible rules? There must
+// be an order of precedence to these rules, and so we will next demonstrate
+// what order to apply the rules.
+
+// default binding is the lowest priority rule
+
+// implicit vs explicit binding ?
+
+
+function fowow() {
+	console.log( this.a );
+}
+var objwow = {
+	a: 'im',
+	foo: fowow
+};
+
+var objwow2 = {
+	a: 'ix',
+};
+
+objwow.foo(); // im
+
+objwow.foo.call( objwow2 ); // ix
+
+// So, explicit binding takes precedence over implicit binding, which means you
+// should ask first if explicit binding applies before checking for implicit binding.
+
+
+// Now, we just need to figure out where new binding fits in the precedence:
+
+// constr
+
+var objj1={
+	foo: constr
+};
+var objj2 = {};
+
+console.log('----')
+
+objj1.foo( 'implicit binding' );
+console.log( objj1.a ); // 2
+
+objj1.foo.call( objj2, 'explicit binding' );
+console.log( objj2.a ); // 2
+
+var newbind = new objj1.foo('new binding');
+
+console.log(objj1.a);
+console.log(newbind.a);
+
+// new binding is more precendent than implicit binding.
+// let see new binding against explicit binding
+
+// new and call/apply cannot be used together, so new foo.call(obj1) is not
+// allowed to test new binding directly against explicit binding.
+// But we can still use a hard binding to test the precedence of the two rules.
+
+function propaga(x) {
+	this.x = x;
+}
+
+var obobo = {
+	a: 'obj'
+}
+
+var propaga2 = propaga.bind(obobo);
+
+
+
+var polo = new propaga2('new over ixplicit');
+
+console.log(polo);
+
+
+// the new bind override the built in bind(..)
+
+
+// determining this
+
+// Now, we can summarize the rules for determining this from a function call’s
+// call-site, in their order of precedence. Ask these questions in this order,
+// and stop when the first rule applies.
+// 1. Is the function called with new (new binding)? If so, this is the newly
+// constructed object.
+//         var bar = new foo()
+// 2. Is the function called with call or apply (explicit binding), even hidden
+// inside a bind hard binding? If so, this is the explicitly specified object.
+//         var bar = foo.call( obj2 )
+// 3. Is the function called with a context (implicit binding), otherwise known
+// as an owning or containing object? If so, this is that con‐ text object.
+//         var bar = obj1.foo()
+// 4. Otherwise, default the this (default binding). If in strict mode, pick
+// undefined, otherwise pick the global object.
+// var bar = foo()
+// That’s it. That’s all it takes to understand the rules of this binding for
+// normal function calls. Well...almost.
+
+
+// soft bind to check
+
+// lexical this
+
+
+// arrow function in JS don't use the THIS four rules instead they inherit
+// the this from the scope the are declared and can't be override later.
+// even with new keyword example:
+
+
+function arrowthis() {
+	return (x) => {
+		this.a = x;
+		console.log(this.a);
+		console.log(this);
+	}
+}
+
+var arr = {
+	a: 2,
+	b: 1
+};
+var arr2 = {
+	a: 'zzz',
+	b: 'zzzz'
+};
+
+var useArrow = arrowthis.call(arr);
+
+useArrow.bind(arr2);
+
+useArrow(4); // 4
